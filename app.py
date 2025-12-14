@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # =========================================================
-# LOAD DATA (DEPLOYMENT SAFE)
+# LOAD DATA (STREAMLIT CLOUD SAFE)
 # =========================================================
 @st.cache_data
 def load_data():
@@ -30,7 +30,7 @@ df = load_data()
 st.sidebar.title("🏥 Healthcare Dashboard")
 page = st.sidebar.radio(
     "Navigation",
-    ["Overview", "EDA", "Insights & Conclusion"]
+    ["Overview", "Exploratory Data Analysis", "Insights & Conclusion"]
 )
 
 # =========================================================
@@ -41,41 +41,34 @@ if page == "Overview":
 
     st.markdown("""
     ### 📌 Project Overview
-    This dashboard performs **Exploratory Data Analysis (EDA)** on a healthcare dataset
-    to understand:
-    - Patient demographics
-    - Medical conditions
-    - Admission types
-    - Billing patterns
-
-    The goal is to extract meaningful insights that can help hospitals and healthcare
-    providers make **data-driven decisions**.
+    This dashboard performs Exploratory Data Analysis (EDA) on a healthcare dataset
+    to understand patient demographics, admission patterns, medical conditions,
+    and billing trends.
     """)
 
-    st.subheader("📊 Dataset Summary")
     col1, col2, col3 = st.columns(3)
     col1.metric("Total Records", df.shape[0])
-    col2.metric("Total Features", df.shape[1])
-    col3.metric("Avg Billing Amount", f"${df['Billing Amount'].mean():.2f}")
+    col2.metric("Total Columns", df.shape[1])
+    col3.metric("Average Billing", f"${df['Billing Amount'].mean():.2f}")
 
-    st.subheader("🔍 Preview of Dataset")
+    st.subheader("Dataset Preview")
     st.dataframe(df.head())
 
 # =========================================================
 # EDA PAGE
 # =========================================================
-elif page == "EDA":
+elif page == "Exploratory Data Analysis":
     st.title("📊 Exploratory Data Analysis")
 
-    # -------- Chart 1: Age Distribution --------
-    st.subheader("1️⃣ Age Distribution of Patients")
+    # 1️⃣ Age Distribution
+    st.subheader("1️⃣ Age Distribution")
     fig, ax = plt.subplots()
     sns.histplot(df["Age"], bins=20, kde=True, ax=ax)
     ax.set_xlabel("Age")
     ax.set_ylabel("Number of Patients")
     st.pyplot(fig)
 
-    # -------- Chart 2: Gender Distribution --------
+    # 2️⃣ Gender Distribution
     st.subheader("2️⃣ Gender Distribution")
     gender_counts = df["Gender"].value_counts()
 
@@ -89,7 +82,7 @@ elif page == "EDA":
     ax.axis("equal")
     st.pyplot(fig)
 
-    # -------- Chart 3: Medical Condition Count --------
+    # 3️⃣ Medical Condition Distribution
     st.subheader("3️⃣ Medical Conditions Distribution")
     fig, ax = plt.subplots(figsize=(8, 5))
     sns.countplot(
@@ -102,7 +95,49 @@ elif page == "EDA":
     ax.set_ylabel("Medical Condition")
     st.pyplot(fig)
 
-    # -------- Chart 4: Admission Type --------
+    # 4️⃣ Admission Type Distribution
     st.subheader("4️⃣ Admission Type Distribution")
     fig, ax = plt.subplots()
     sns.countplot(
+        x="Admission Type",
+        data=df,
+        ax=ax
+    )
+    ax.set_xlabel("Admission Type")
+    ax.set_ylabel("Count")
+    st.pyplot(fig)
+
+    # 5️⃣ Billing Amount by Insurance Provider
+    st.subheader("5️⃣ Average Billing Amount by Insurance Provider")
+    billing_avg = (
+        df.groupby("Insurance Provider")["Billing Amount"]
+        .mean()
+        .sort_values(ascending=False)
+    )
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    billing_avg.plot(kind="bar", ax=ax)
+    ax.set_xlabel("Insurance Provider")
+    ax.set_ylabel("Average Billing Amount")
+    st.pyplot(fig)
+
+# =========================================================
+# INSIGHTS & CONCLUSION PAGE
+# =========================================================
+else:
+    st.title("📌 Key Insights & Conclusion")
+
+    st.markdown("""
+    ### 🔍 Key Insights
+    - Most patients belong to adult and senior age groups.
+    - Gender distribution is nearly balanced.
+    - A few medical conditions account for a large proportion of hospital visits.
+    - Emergency admissions are more frequent than elective ones.
+    - Billing amounts vary significantly across insurance providers.
+
+    ### ✅ Conclusion
+    This EDA helps understand patient demographics, healthcare demand,
+    and billing behavior. These insights can assist hospitals in
+    improving patient care, resource planning, and cost management.
+    """)
+
